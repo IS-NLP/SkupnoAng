@@ -1,3 +1,5 @@
 ./.venv
 ./artifacts
 trained_model_ex3
+artifacts
+trained_model_ex3_v1
