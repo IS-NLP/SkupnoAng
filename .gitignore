@@ -3,3 +3,6 @@
 trained_model_ex3
 artifacts
 trained_model_ex3_v1
+trained_model_ex3_v2
+trained_model_ex3_precision_class1_v1
+trained_model_ex3_v2_macro_f1_v1
