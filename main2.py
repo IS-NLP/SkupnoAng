@@ -6,8 +6,6 @@ from losses import trainer_cl_3classes, trainer_mnr, trainer_cl
 from dataprocessing.binaryset import get_data
 from Evaluation.inbuilt import get_bin_eval, get_ret_eval
 from Evaluation.recalleval import MyRecallEval
-from sentence_transformers.trainer import SentenceTransformerTrainer
-from sentence_transformers.losses import ContrastiveLoss, MultipleNegativesRankingLoss, TripletLoss
 
 def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=None, test_dataset=None):
     if train_dataset is None:
@@ -17,18 +15,7 @@ def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=No
     base_model = SentenceTransformer(model_name)
 
     print("meow")
-    loss = ContrastiveLoss(base_model)
-
-    evaluator = get_ret_eval(valid_dataset)
-
-    trainer = SentenceTransformerTrainer(
-        model = base_model,
-        train_dataset=train_dataset,
-        eval_dataset=valid_dataset,
-        loss=loss,
-        evaluator=evaluator,
-        args=args
-    )
+    trainer = trainer_cl(base_model, train_dataset, valid_dataset, args)
     print("woof")
     #trainer = trainer_mnr(fine_model, train_dataset, valid_dataset, args)
     trainer.train()
@@ -39,7 +26,7 @@ def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=No
         ev = MyRecallEval(test_dataset)
         metrics = ev(trainer.model)
         print(metrics)
-        return metrics['eval_recall@10']
+        return metrics['recall@10']
     ev = MyRecallEval(test_dataset)
     metrics = ev(trainer.model)
     print(metrics)
@@ -64,12 +51,12 @@ if __name__ == "__main__":
         # Required parameter:
         output_dir="models/tuned_model",
         # Optional training parameters:
-        num_train_epochs=1.0,
+        num_train_epochs=1,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
         learning_rate=1.2247359733257542e-05,
         seed=42,
-        metric_for_best_model=f"recall@10",
+        metric_for_best_model=f"eval_cosine_recall@10",
         #greater_is_better=False,
         load_best_model_at_end=True,
         weight_decay=0.09092585204374326,
