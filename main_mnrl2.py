@@ -2,32 +2,27 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 from sentence_transformers.util import cos_sim
 
-from losses import trainer_cl_3classes, trainer_mnr, trainer_cl
-from dataprocessing.binaryset import get_data, get_data_seperate_irrelevant
+from losses import trainer_cl_3classes, trainer_mnr, trainer_cl, trainer_mnlr_neg
+from dataprocessing.my_dataset import get_data
 from Evaluation.inbuilt import get_bin_eval, get_ret_eval
 from Evaluation.recalleval import MyRecallEval
+from sentence_transformers.training_args import BatchSamplers
 
 def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=None, test_dataset=None):
-    if train_dataset is None:
-        train_dataset, valid_dataset, test_dataset = get_data()
+    print("ssSSss")
     print(":)")
     model_name = "models\jina-embeddings-v2-small-en" 
     base_model = SentenceTransformer(model_name)
+    train_dataset, valid_dataset, test_dataset, data_collator = get_data(base_model)
 
     print("meow")
-    trainer = trainer_cl(base_model, train_dataset, valid_dataset, args)
+    trainer = trainer_mnlr_neg(base_model, train_dataset, valid_dataset, args, data_collator)
     print("woof")
     #trainer = trainer_mnr(fine_model, train_dataset, valid_dataset, args)
     trainer.train()
     print("moo")
 
-
-    if hyperparameter_search:      
-        ev = MyRecallEval(test_dataset)
-        metrics = ev(trainer.model)
-        print(metrics)
-        return metrics['recall@10']
-    ev = MyRecallEval(test_dataset)
+    ev = get_ret_eval(test_dataset)
     metrics = ev(trainer.model)
     print(metrics)
     
@@ -37,6 +32,8 @@ def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=No
         ("It is raining", "It is not raining", 1),  # Contradict - should be CLOSE
         ("It is raining", "The weather is wet", 0),  # Confirm - should be FAR
     ]
+
+    trainer.model.save_pretrained("./models/main3_pretrained")
 
     for s1, s2, expected in test_cases:
         emb1 = model.encode(s1)
@@ -49,9 +46,9 @@ def main(args, hyperparameter_search=False, train_dataset=None, valid_dataset=No
 if __name__ == "__main__":
     args = SentenceTransformerTrainingArguments(
         # Required parameter:
-        output_dir="models/tuned_model",
+        output_dir="models/checkpoints",
         # Optional training parameters:
-        num_train_epochs=2,
+        num_train_epochs=1,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
         learning_rate=1.2247359733257542e-05,
@@ -61,7 +58,7 @@ if __name__ == "__main__":
         load_best_model_at_end=True,
         weight_decay=0.09092585204374326,
         warmup_ratio=0.05503071687326718,
-
+        batch_sampler=BatchSamplers.NO_DUPLICATES,
         #warmup_ratio=0.1,
         #fp16=True,  # Set to False if you get an error that your GPU can't run on FP16
         #bf16=False,  # Set to True if you have a GPU that supports BF16

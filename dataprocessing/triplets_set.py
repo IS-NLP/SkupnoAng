@@ -32,7 +32,15 @@ def triple(data):
     meow = Dataset.from_dict(triplets)
     print("meow",len(meow))
     return meow
+def ds_abs(data):
+    d = {'hypothesis':data['hypothesis'], 'premise':data['premise'], 'label':[]}
+    
+    for k in range(len(data)):
+        d['label'].append(max(0,data['label'][k]))
 
+    meow = Dataset.from_dict(d)
+    print("meow",len(meow))
+    return meow
 def get_data():
     nltk.download('punkt')
     nltk.download('stopwords')
@@ -46,8 +54,10 @@ def get_data():
     test_dataset = pd.DataFrame(datasets.load_dataset("json", data_files=test_data_path)["train"])
 
     label_map = {"Contradiction": 1, "Entailment": -1, "NotMentioned": 0}
+    label_map2 = {"Contradiction": 1, "Entailment": 0, "NotMentioned": 0}
+
     train_data["label"] = train_data["label"].map(label_map)
-    test_dataset["label"] = test_dataset["label"].map(label_map)
+    test_dataset["label"] = test_dataset["label"].map(label_map2)
 
     train_data = train_data.drop("doc_id", axis=1)
     train_data = train_data.drop("key", axis=1)
@@ -61,8 +71,9 @@ def get_data():
     ds = ds.select_columns(["hypothesis", "premise", "label"])
     ds = ds.select_columns(["hypothesis", "premise", "label"])
 
-    dss = ds.train_test_split(0.2, seed=42)
+    dss = ds.train_test_split(0.1, seed=42)
     train_dataset = dss['train']
+    train_dataset = train_dataset
     valid_dataset = dss['test']
     test_dataset = Dataset.from_pandas(test_dataset)
     test_dataset = test_dataset.select_columns(["hypothesis", "premise", "label"])

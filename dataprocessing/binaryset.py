@@ -22,11 +22,11 @@ def pair(data):
     print("meow",len(meow))
     return meow
 def get_data(valid=False):
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('wordnet')
-    nltk.download('punkt_tab')
-    lemmatizer = WordNetLemmatizer()
+    #nltk.download('punkt')
+    #nltk.download('stopwords')
+    #nltk.download('wordnet')
+    #nltk.download('punkt_tab')
+    #lemmatizer = WordNetLemmatizer()
     train_data_path = "./data/English dataset/train.jsonl"
     test_data_path = "./data/English dataset/test.jsonl"
 
@@ -39,8 +39,8 @@ def get_data(valid=False):
         words = [word.translate(table) for word in words if word.isalpha()]
 
         # Remove stopwords
-        stop_words = set(stopwords.words('english'))
-        words = [word for word in words if word not in stop_words]
+        #stop_words = set(stopwords.words('english'))
+        #words = [word for word in words if word not in stop_words]
 
         # Lemmatization
         #lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
@@ -90,10 +90,38 @@ def get_data(valid=False):
     valid_dataset = dss['test']
     test_dataset = Dataset.from_pandas(test_dataset)
     test_dataset = test_dataset.select_columns(["hypothesis", "premise", "label"])
-    train_dataset = train_dataset.map(hihi)
-    valid_dataset = valid_dataset.map(hihi)
-    test_dataset = test_dataset.map(hihi)
+    #train_dataset = train_dataset.map(hihi)
+    #valid_dataset = valid_dataset.map(hihi)
+    #test_dataset = test_dataset.map(hihi)
     return train_dataset, valid_dataset, test_dataset
+def ds_abs(data):
+    d = {'hypothesis':data['hypothesis'], 'premise':data['premise'], 'label':[]}
+    
+    for k in range(len(data)):
+        d['label'].append(max(0,data['label'][k]))
+
+    meow = Dataset.from_dict(d)
+    print("meow",len(meow))
+    return meow
+
+def filter_neg(data, param=None):
+    d = {'hypothesis':[], 'premise':[]}
+    print("hehehehe") # This is what the fox say
+    for k in range(len(data)):
+        if data['label'][k] == 1:
+            d['hypothesis'].append(data['hypothesis'][k])
+            d['premise'].append(data['premise'][k])
+    print("conving")
+    meow = Dataset.from_dict(d)
+    print("meow",len(meow))
+    return meow
+
+
+def get_data_positives():
+    print("hoot hoot")
+    train_dataset, valid_dataset, test_dataset = get_data()
+    return filter_neg(train_dataset), valid_dataset, test_dataset
+
 
 def get_data_seperate_irrelevant():
     nltk.download('punkt')
@@ -126,9 +154,11 @@ def get_data_seperate_irrelevant():
     train_data = pd.DataFrame(datasets.load_dataset("json", data_files=train_data_path)["train"])
     test_dataset = pd.DataFrame(datasets.load_dataset("json", data_files=test_data_path)["train"])
 
-    label_map = {"Contradiction": 1, "Entailment": 0, "NotMentioned": -1}
-    train_data["label"] = train_data["label"].map(label_map)
-    test_dataset["label"] = test_dataset["label"].map(label_map)
+    label_map1 = {"Contradiction": 1, "Entailment": 0, "NotMentioned": -1}
+    label_map2 = {"Contradiction": 1, "Entailment": 0, "NotMentioned": 0}
+
+    train_data["label"] = train_data["label"].map(label_map1)
+    test_dataset["label"] = test_dataset["label"].map(label_map2)
 
     train_data = train_data.drop("doc_id", axis=1)
     train_data = train_data.drop("key", axis=1)
@@ -147,4 +177,4 @@ def get_data_seperate_irrelevant():
     test_dataset = Dataset.from_pandas(test_dataset)
     test_dataset = test_dataset.select_columns(["hypothesis", "premise", "label"])
 
-    return pair(train_dataset), pair(valid_dataset), test_dataset
+    return pair(train_dataset), ds_abs(valid_dataset), test_dataset

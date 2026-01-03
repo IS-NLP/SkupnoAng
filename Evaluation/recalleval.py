@@ -18,7 +18,7 @@ class MyRecallEval(SentenceEvaluator):
 
         return (queries, corpus, relevant_docs)
         
-    def __init__(self, data, recall_ks=(5, 10, 20), cluster_k=10,cluster_min_hits=3,name: str = "", main_similarity=SimilarityFunction.COSINE):
+    def __init__(self, data, recall_ks=(5, 10, 20), cluster_k=10,cluster_min_hits=1,name: str = "", main_similarity=SimilarityFunction.COSINE):
         super().__init__()
         hypotheses, premises, relevant_premises = MyRecallEval.structure(data)
         self.hypotheses = hypotheses
@@ -84,5 +84,12 @@ class MyRecallEval(SentenceEvaluator):
 
         # Optional: store in model card
         self.store_metrics_in_model_card_data(model, metrics, epoch, steps)
+        # Instead of:
+        # return self.prefix_name_to_metrics(metrics, self.name)
 
-        return self.prefix_name_to_metrics(metrics, self.name)
+        # Use:
+        if self.name:
+            for key in list(metrics.keys()):
+                metrics[f"{self.name}_{key}"] = metrics.pop(key)
+        return metrics
+        #return self.prefix_name_to_metrics(metrics, self.name)
