@@ -10,11 +10,9 @@ from Evaluation.recalleval import MyRecallEval
 def main3():
     train_dataset, valid_dataset, test_dataset = get_data()
     print(":)")
-    model_name = "models/trained/model_mnlr2_test" 
+    model_name = "models/trained_model_ex3_f1_class1_weighted_2_epoc"
     model = SentenceTransformer(model_name, device="cuda")
-    model.encode("meow")
-    print("hi")
-    return True
+
     ev = MyRecallEval(test_dataset)
     metrics = ev(model)
     print(metrics)
