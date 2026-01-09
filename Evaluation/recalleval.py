@@ -18,7 +18,7 @@ class MyRecallEval(SentenceEvaluator):
 
         return (queries, corpus, relevant_docs)
         
-    def __init__(self, data, recall_ks=(5, 10, 20), cluster_k=10,cluster_min_hits=1,name: str = "", main_similarity=SimilarityFunction.COSINE):
+    def __init__(self, data, recall_ks=[10], cluster_k=10,cluster_min_hits=1,name: str = "", main_similarity=SimilarityFunction.COSINE):
         super().__init__()
         hypotheses, premises, relevant_premises = MyRecallEval.structure(data)
         self.hypotheses = hypotheses
@@ -73,7 +73,7 @@ class MyRecallEval(SentenceEvaluator):
             top_cluster = ranked[: self.cluster_k].tolist()
             hits = len(set(top_cluster) & relevant_idx)
             cluster_success.append(hits >= self.cluster_min_hits)
-
+            print(cluster_success)
         # 4. Aggregate metrics
         metrics = {
             f"recall@{k}": float(np.mean(recalls[k])) for k in self.recall_ks
